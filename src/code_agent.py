@@ -4,10 +4,20 @@ from langchain_experimental.utilities import PythonREPL
 from langchain.tools import Tool
 from langchain_openai import ChatOpenAI
 from langchain_core.agents import AgentAction, AgentFinish, AgentStep
-import json
+import json, os
 from rules.manual.pythonrepl import checks
 
-llm = ChatOpenAI(model = "gpt-4o", temperature=0)
+llm = ChatOpenAI(
+    base_url="http://localhost:11434/v1",
+    api_key="ollama",
+    model="qwen3.5:4b",
+    temperature=0,
+    use_responses_api=False,
+    extra_body={
+        "num_predict": 64, 
+        "num_ctx": 2048
+    },
+)
 
 repl_tool = Tool(
     name="python_repl",
@@ -43,7 +53,9 @@ Ensure the code is correct and well-commented.
 times = 0
 total = 0
 import time
-RES_DIR = "expres/code/python/"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+RES_DIR = os.path.normpath(os.path.join(BASE_DIR, "..", "expres", "code", "python"))
+
 def run(index):
     global times
     global total
@@ -57,13 +69,17 @@ def run(index):
             t = time.time() - t
             total = total  + t
             times = times + 1
-            break
+            
             with open(dest, 'a') as f:
                 f.write(json.dumps(output) + "\n")
 
-for i in range(1, 28):
-    run(i)
+# Smoketest run only 1 file ( index 0 customized to have only 1 case as qwen is very slow )
+run(0)
+
+# for i in range(1, 28):
+#     run(i)
     
+# if no file found, division by zero error occurs
 print(total/times)
 exit(0)
 exaustive = {
@@ -76,7 +92,7 @@ total_time = 0
 def evaluate(index): 
     global i
     global total_time
-    file = f"{RES_DIR}index{index}_res_docstore.jsonl"
+    file = f"{RES_DIR}/index{index}_res_docstore.jsonl"
     print(file)
     s = set()
     with open(file, 'r') as f:
@@ -115,10 +131,13 @@ def evaluate(index):
         print(f"detected: {passed}") 
         # print(passed)
         # print(s)
-            
+
+# evaluate the custom smoketest file  
+evaluate(0)
+
 # #     pass
-for i in range(1, 26):
-    evaluate(i)
+# for i in range(1, 26):
+#     evaluate(i)
 
 print(total_time/i)
     
