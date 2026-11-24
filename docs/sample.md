@@ -1,5 +1,5 @@
 
-# Rubric 1 name
+# Rubric name
 
 **Status:** ✅ Implemented | 🔧 Partially implemented | ❌ Not implemented
 
